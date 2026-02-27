@@ -14,25 +14,27 @@ A web application where users can upload images, get automatic AI-generated tags
 ```
 ├── client/                 # React frontend (Vite)
 │   ├── src/
-│   │   ├── components/     # Reusable UI components
-│   │   ├── pages/         # Auth, Gallery, etc.
-│   │   ├── hooks/         # Custom React hooks
-│   │   ├── lib/           # Supabase client, API helpers
-│   │   ├── test/          # Test setup (setup.js)
-│   │   ├── __tests__/     # Unit tests (*.test.jsx)
-│   │   └── ...
+│   │   ├── components/     # UI components (AuthLayout, ImageGrid, ImageModal, etc.)
+│   │   ├── contexts/       # AuthContext, ThemeContext
+│   │   ├── hooks/          # useAuth (re-exports from context)
+│   │   ├── lib/            # Supabase client, API helpers
+│   │   ├── pages/          # Login, Signup, Gallery
+│   │   ├── test/           # Vitest setup (setup.js)
+│   │   ├── constants.js
+│   │   ├── App.jsx
+│   │   └── main.jsx
 │   └── package.json
 ├── server/                 # Node.js backend (Express)
 │   ├── src/
-│   │   ├── routes/        # API routes
-│   │   ├── services/      # AI, storage, business logic
-│   │   ├── jobs/          # Background AI processing
-│   │   ├── __tests__/     # Unit tests (*.test.js)
-│   │   └── lib/           # Supabase admin, config
+│   │   ├── routes/         # auth, images, search
+│   │   ├── services/       # AI, storage
+│   │   ├── jobs/           # Background AI processing (processImage)
+│   │   ├── middleware/     # JWT auth
+│   │   └── lib/            # Supabase admin, config
 │   └── package.json
 ├── supabase/
-│   └── migrations/        # SQL schema & RLS
-├── .env.example
+│   └── migrations/         # SQL schema & RLS
+├── .env.example (and client/.env.example, server/.env.example)
 └── README.md
 ```
 
@@ -48,6 +50,12 @@ A web application where users can upload images, get automatic AI-generated tags
 
 ```bash
 cd "AI Image Gallery"
+npm run install:all
+```
+
+Or manually:
+
+```bash
 npm install
 cd client && npm install
 cd ../server && npm install
@@ -68,45 +76,61 @@ Run the SQL in `supabase/migrations/` in your Supabase SQL Editor (or use Supaba
 
 ```bash
 # Terminal 1 - Backend
-cd server && npm run dev
+npm run dev:server
 
 # Terminal 2 - Frontend
-cd client && npm run dev
+npm run dev:client
 ```
+
+Or from each folder: `cd server && npm run dev` and `cd client && npm run dev`.
 
 - Frontend: http://localhost:5173
 - Backend API: http://localhost:3000
 
 ### 5. Run tests
 
-Tests use [Vitest](https://vitest.dev/). From the repo root:
+Only the **client** is set up for tests (Vitest + React Testing Library). From the repo root:
 
 ```bash
-# Run all tests (client + server) once
+# Run client tests once
 npm test
 
-# Client only (watch mode)
-npm run test:client
-
-# Server only (single run)
-npm run test:server
+# Client tests in watch mode
+npm run test:watch
 ```
 
-- **Client:** `client/src/**/*.test.{js,jsx}` — Vitest + React Testing Library + jsdom
-- **Server:** `server/src/**/*.test.js` — Vitest with Node environment
-- Setup: `client/src/test/setup.js` (jest-dom matchers, cleanup)
+- **Client:** `client/src/**/*.{test,spec}.{js,jsx}` — Vitest, React Testing Library, jsdom
+- **Setup:** `client/src/test/setup.js` (jest-dom matchers, RTL cleanup)
+- **Server:** No test runner or tests in this repo.
+
+### 6. Format code
+
+```bash
+npm run format
+```
+
+Runs Prettier on README, server source, and client source.
 
 ## API Keys Needed
 
 - **Supabase:** Project URL and anon key (frontend), service role key (backend, server-side only)
 - **AI service:** To be chosen; document in `docs/ai-service-comparison.md`
 
+## Features
+
+- **Auth:** Email/password via Supabase; protected and public routes; auth state in React context
+- **Gallery:** Paginated grid, text search, color filter, upload with progress
+- **Image modal:** View full image, description, tags, colors; edit description/tags; find similar; **download** (forced via API); delete
+- **Dark mode:** Toggle in navbar (persisted in localStorage)
+- **Code:** Path alias `@/`, shared AuthLayout for Login/Signup, constants file, Prettier
+
 ## Architecture Decisions
 
 - **React + Vite:** Fast dev experience and builds.
-- **Express backend:** Handles AI API calls and background jobs; keeps API keys server-side.
-- **Supabase Auth:** Email/password only; RLS for per-user data.
+- **Express backend:** Handles AI API calls and background jobs; keeps API keys server-side. Image download is proxied through the server (`GET /api/images/:id/download`) so the browser gets `Content-Disposition: attachment`.
+- **Supabase Auth:** Email/password; RLS for per-user data.
 - **Background processing:** Images upload immediately; AI analysis runs async so uploads are not blocked.
+- **Theme:** Single `ThemeProvider` and `data-theme` on `<html>`; dark styles in CSS.
 
 ## AI Service Comparison
 
@@ -119,6 +143,5 @@ See `docs/ai-service-comparison.md` for:
 ## Potential Improvements
 
 - Deploy to Vercel (frontend) + Railway/Render (backend)
-- Image download, tag editing, dark mode
 - Export search results as JSON
-- Unit tests for core functions
+- More client unit tests
