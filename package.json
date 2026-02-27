@@ -8,6 +8,10 @@
     "build:client": "npm run build --prefix client",
     "install:all": "npm install && npm install --prefix client && npm install --prefix server",
     "test": "npm run test:run --prefix client",
-    "test:watch": "npm run test --prefix client"
+    "test:watch": "npm run test --prefix client",
+    "format": "prettier --write \"README.md\" \"server/src/**/*.js\" \"client/src/**/*.{js,jsx}\""
+  },
+  "devDependencies": {
+    "prettier": "^3.8.1"
   }
 }

@@ -11,13 +11,10 @@ const FALLBACK_COLORS = [
   '#6F4E37',
   '#FFB6C1',
   '#98FB98',
-]
+];
 
 export default function ColorFilter({ selectedColor, onSelectColor, colors }) {
-  const palette =
-    Array.isArray(colors) && colors.length
-      ? colors.slice(0, 12)
-      : FALLBACK_COLORS
+  const palette = Array.isArray(colors) && colors.length ? colors.slice(0, 12) : FALLBACK_COLORS;
 
   return (
     <div className="color-filter">
@@ -37,5 +34,5 @@ export default function ColorFilter({ selectedColor, onSelectColor, colors }) {
         ))}
       </div>
     </div>
-  )
+  );
 }

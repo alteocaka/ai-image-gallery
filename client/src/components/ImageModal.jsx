@@ -1,44 +1,48 @@
-import { useEffect, useState } from 'react'
-import { api } from '../lib/api'
+import { useEffect, useState } from 'react';
+import { api } from '../lib/api';
 
 export default function ImageModal({ image, onClose, onFindSimilar, onDeleted, onUpdated }) {
-  const [current, setCurrent] = useState(image || null)
-  const [editing, setEditing] = useState(false)
-  const [editDescription, setEditDescription] = useState('')
-  const [editTags, setEditTags] = useState([])
-  const [newTagInput, setNewTagInput] = useState('')
-  const [saving, setSaving] = useState(false)
-  const [saveError, setSaveError] = useState(null)
-  const [deleting, setDeleting] = useState(false)
-  const [confirming, setConfirming] = useState(false)
+  const [current, setCurrent] = useState(image || null);
+  const [editing, setEditing] = useState(false);
+  const [editDescription, setEditDescription] = useState('');
+  const [editTags, setEditTags] = useState([]);
+  const [newTagInput, setNewTagInput] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const [confirming, setConfirming] = useState(false);
 
   useEffect(() => {
     function handleEscape(e) {
       if (e.key === 'Escape') {
-        if (editing) setEditing(false)
-        else onClose()
+        if (editing) setEditing(false);
+        else onClose();
       }
     }
-    document.addEventListener('keydown', handleEscape)
-    document.body.style.overflow = 'hidden'
+    document.addEventListener('keydown', handleEscape);
+    document.body.style.overflow = 'hidden';
     return () => {
-      document.removeEventListener('keydown', handleEscape)
-      document.body.style.overflow = ''
-    }
-  }, [onClose, editing])
+      document.removeEventListener('keydown', handleEscape);
+      document.body.style.overflow = '';
+    };
+  }, [onClose, editing]);
 
   useEffect(() => {
-    setCurrent(image || null)
-  }, [image])
+    setCurrent(image || null);
+  }, [image]);
 
   // Sync edit form when opening edit popup or when switching to another image
   useEffect(() => {
-    if (!current || !editing) return
-    setEditDescription(current.description ?? '')
-    setEditTags(Array.isArray(current.tags) ? [...current.tags].map((t) => String(t).trim()).filter(Boolean) : [])
-  }, [current?.id, editing])
+    if (!current || !editing) return;
+    setEditDescription(current.description ?? '');
+    setEditTags(
+      Array.isArray(current.tags)
+        ? [...current.tags].map((t) => String(t).trim()).filter(Boolean)
+        : []
+    );
+  }, [current?.id, editing]);
 
-  if (!current) return null
+  if (!current) return null;
 
   // Support both old mock-data shape (original_url) and new API shape (originalUrl)
   const {
@@ -49,90 +53,93 @@ export default function ImageModal({ image, onClose, onFindSimilar, onDeleted, o
     tags = [],
     colors = [],
     aiStatus = 'pending',
-  } = current
+  } = current;
 
-  const fullUrl = originalUrl || original_url
-  const isDone = aiStatus === 'completed'
+  const fullUrl = originalUrl || original_url;
+  const isDone = aiStatus === 'completed';
 
   function removeTag(index) {
-    setEditTags((prev) => prev.filter((_, i) => i !== index))
+    setEditTags((prev) => prev.filter((_, i) => i !== index));
   }
 
   function addTag() {
-    const t = newTagInput.trim().toLowerCase()
+    const t = newTagInput.trim().toLowerCase();
     if (!t || editTags.includes(t)) {
-      setNewTagInput('')
-      return
+      setNewTagInput('');
+      return;
     }
-    setEditTags((prev) => [...prev, t])
-    setNewTagInput('')
+    setEditTags((prev) => [...prev, t]);
+    setNewTagInput('');
   }
 
   function handleNewTagKeyDown(e) {
     if (e.key === 'Enter' || e.key === ',') {
-      e.preventDefault()
-      addTag()
+      e.preventDefault();
+      addTag();
     }
   }
 
   async function handleSave() {
-    if (!current?.id || saving) return
-    setSaveError(null)
-    setSaving(true)
+    if (!current?.id || saving) return;
+    setSaveError(null);
+    setSaving(true);
     try {
-      const description = editDescription.trim() || null
-      const tags = [...editTags].map((t) => String(t).trim()).filter(Boolean)
+      const description = editDescription.trim() || null;
+      const tags = [...editTags].map((t) => String(t).trim()).filter(Boolean);
       const updated = await api(`/images/${current.id}`, {
         method: 'PATCH',
         body: JSON.stringify({ description, tags }),
-      })
-      const nextDescription = updated?.description ?? description
-      const nextTags = Array.isArray(updated?.tags) ? updated.tags : tags
-      setCurrent((prev) => (prev ? { ...prev, description: nextDescription, tags: nextTags } : prev))
-      setEditing(false)
-      if (typeof onUpdated === 'function') onUpdated(current.id, { description: nextDescription, tags: nextTags })
+      });
+      const nextDescription = updated?.description ?? description;
+      const nextTags = Array.isArray(updated?.tags) ? updated.tags : tags;
+      setCurrent((prev) =>
+        prev ? { ...prev, description: nextDescription, tags: nextTags } : prev
+      );
+      setEditing(false);
+      if (typeof onUpdated === 'function')
+        onUpdated(current.id, { description: nextDescription, tags: nextTags });
     } catch (err) {
-      setSaveError(err?.body?.error || err.message || 'Failed to save')
+      setSaveError(err?.body?.error || err.message || 'Failed to save');
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
   }
 
   // Poll for AI status while pending so the modal updates live
   useEffect(() => {
-    if (!current?.id || current.aiStatus === 'completed') return
-    let cancelled = false
+    if (!current?.id || current.aiStatus === 'completed') return;
+    let cancelled = false;
     const interval = setInterval(async () => {
       try {
-        const updated = await api(`/images/${current.id}`)
-        if (cancelled || !updated) return
-        setCurrent((prev) => (prev && prev.id === updated.id ? { ...prev, ...updated } : updated))
+        const updated = await api(`/images/${current.id}`);
+        if (cancelled || !updated) return;
+        setCurrent((prev) => (prev && prev.id === updated.id ? { ...prev, ...updated } : updated));
         if (updated.aiStatus === 'completed' || updated.aiStatus === 'failed') {
-          clearInterval(interval)
+          clearInterval(interval);
         }
       } catch {
         // ignore polling errors
       }
-    }, 2500)
+    }, 2500);
     return () => {
-      cancelled = true
-      clearInterval(interval)
-    }
-  }, [current?.id, current?.aiStatus])
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [current?.id, current?.aiStatus]);
 
   async function performDelete() {
-    if (!current?.id || deleting) return
+    if (!current?.id || deleting) return;
     try {
-      setDeleting(true)
-      await api(`/images/${current.id}`, { method: 'DELETE' })
+      setDeleting(true);
+      await api(`/images/${current.id}`, { method: 'DELETE' });
       if (typeof onDeleted === 'function') {
-        onDeleted(current.id)
+        onDeleted(current.id);
       } else {
-        onClose()
+        onClose();
       }
     } catch (err) {
-      console.error('Failed to delete image', err)
-      setDeleting(false)
+      console.error('Failed to delete image', err);
+      setDeleting(false);
     }
   }
 
@@ -149,12 +156,7 @@ export default function ImageModal({ image, onClose, onFindSimilar, onDeleted, o
           <h2 id="image-modal-title" className="image-modal-title">
             {filename}
           </h2>
-          <button
-            type="button"
-            className="image-modal-close"
-            onClick={onClose}
-            aria-label="Close"
-          >
+          <button type="button" className="image-modal-close" onClick={onClose} aria-label="Close">
             ×
           </button>
         </div>
@@ -171,9 +173,7 @@ export default function ImageModal({ image, onClose, onFindSimilar, onDeleted, o
           <div className="image-modal-meta">
             {isDone ? (
               <>
-                {description && (
-                  <p className="image-modal-description">{description}</p>
-                )}
+                {description && <p className="image-modal-description">{description}</p>}
                 <div className="image-modal-tags">
                   <span className="image-modal-label">Tags</span>
                   {tags.length > 0 ? (
@@ -240,7 +240,20 @@ export default function ImageModal({ image, onClose, onFindSimilar, onDeleted, o
                   onClick={onFindSimilar}
                   disabled={deleting}
                 >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden
+                  >
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="m21 21-4.35-4.35" />
+                  </svg>
                   <span>Find similar images</span>
                 </button>
               )}
@@ -253,7 +266,20 @@ export default function ImageModal({ image, onClose, onFindSimilar, onDeleted, o
                   aria-label="Edit description and tags"
                   title="Edit description and tags"
                 >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden
+                  >
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                  </svg>
                 </button>
               )}
               <button
@@ -267,7 +293,23 @@ export default function ImageModal({ image, onClose, onFindSimilar, onDeleted, o
                 {deleting ? (
                   <span className="image-modal-action-spinner" aria-hidden />
                 ) : (
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /></svg>
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden
+                  >
+                    <path d="M3 6h18" />
+                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                    <line x1="10" y1="11" x2="10" y2="17" />
+                    <line x1="14" y1="11" x2="14" y2="17" />
+                  </svg>
                 )}
               </button>
             </div>
@@ -276,13 +318,15 @@ export default function ImageModal({ image, onClose, onFindSimilar, onDeleted, o
             <div
               className="image-modal-confirm-backdrop image-modal-edit-backdrop"
               onClick={(e) => {
-                if (e.target === e.currentTarget && !saving) setEditing(false)
+                if (e.target === e.currentTarget && !saving) setEditing(false);
               }}
             >
               <div className="image-modal-edit-popup" onClick={(e) => e.stopPropagation()}>
                 <h3 className="image-modal-edit-title">Edit description &amp; tags</h3>
                 <div className="image-modal-edit-field">
-                  <label htmlFor="image-modal-edit-desc" className="image-modal-label">Description</label>
+                  <label htmlFor="image-modal-edit-desc" className="image-modal-label">
+                    Description
+                  </label>
                   <textarea
                     id="image-modal-edit-desc"
                     className="image-modal-description-input"
@@ -322,7 +366,9 @@ export default function ImageModal({ image, onClose, onFindSimilar, onDeleted, o
                   </div>
                 </div>
                 {saveError && (
-                  <p className="image-modal-save-error" role="alert">{saveError}</p>
+                  <p className="image-modal-save-error" role="alert">
+                    {saveError}
+                  </p>
                 )}
                 <div className="image-modal-edit-actions">
                   <button
@@ -346,37 +392,37 @@ export default function ImageModal({ image, onClose, onFindSimilar, onDeleted, o
             </div>
           )}
           {confirming && !deleting && (
-              <div
-                className="image-modal-confirm-backdrop"
-                onClick={(e) => {
-                  if (e.target === e.currentTarget) setConfirming(false)
-                }}
-              >
-                <div className="image-modal-confirm">
-                  <p className="image-modal-confirm-text">
-                    Delete this image? This action cannot be undone.
-                  </p>
-                  <div className="image-modal-confirm-actions">
-                    <button
-                      type="button"
-                      className="image-modal-confirm-cancel"
-                      onClick={() => setConfirming(false)}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="button"
-                      className="image-modal-confirm-delete"
-                      onClick={performDelete}
-                    >
-                      Delete
-                    </button>
-                  </div>
+            <div
+              className="image-modal-confirm-backdrop"
+              onClick={(e) => {
+                if (e.target === e.currentTarget) setConfirming(false);
+              }}
+            >
+              <div className="image-modal-confirm">
+                <p className="image-modal-confirm-text">
+                  Delete this image? This action cannot be undone.
+                </p>
+                <div className="image-modal-confirm-actions">
+                  <button
+                    type="button"
+                    className="image-modal-confirm-cancel"
+                    onClick={() => setConfirming(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="image-modal-confirm-delete"
+                    onClick={performDelete}
+                  >
+                    Delete
+                  </button>
                 </div>
               </div>
-            )}
+            </div>
+          )}
         </div>
       </div>
     </div>
-  )
+  );
 }

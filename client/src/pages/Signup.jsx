@@ -1,50 +1,52 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { supabase, isSupabaseConfigured } from '../lib/supabase'
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
 export default function Signup() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [error, setError] = useState(null)
-  const [loading, setLoading] = useState(false)
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e) {
-    e.preventDefault()
-    setError(null)
+    e.preventDefault();
+    setError(null);
     if (!isSupabaseConfigured) {
-      setError('Sign up is disabled. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to client/.env')
-      return
+      setError(
+        'Sign up is disabled. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to client/.env'
+      );
+      return;
     }
     if (!email.trim() || !password || !confirmPassword) {
-      setError('Please fill in all fields.')
-      return
+      setError('Please fill in all fields.');
+      return;
     }
     if (password !== confirmPassword) {
-      setError('Passwords do not match.')
-      return
+      setError('Passwords do not match.');
+      return;
     }
     if (password.length < 6) {
-      setError('Password must be at least 6 characters.')
-      return
+      setError('Password must be at least 6 characters.');
+      return;
     }
-    setLoading(true)
+    setLoading(true);
     try {
       const { error: signUpError } = await supabase.auth.signUp({
         email: email.trim(),
         password,
-      })
-      if (signUpError) throw signUpError
+      });
+      if (signUpError) throw signUpError;
       // Success: useAuth will update; some projects require email confirmation
-      setError(null)
-      setEmail('')
-      setPassword('')
-      setConfirmPassword('')
+      setError(null);
+      setEmail('');
+      setPassword('');
+      setConfirmPassword('');
       // Optional: show "Check your email" message if Supabase email confirmation is on
     } catch (err) {
-      setError(err.message || 'Sign up failed.')
+      setError(err.message || 'Sign up failed.');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -56,7 +58,8 @@ export default function Signup() {
 
         {!isSupabaseConfigured && (
           <div className="auth-notice" role="status">
-            Supabase is not configured. Add <code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_ANON_KEY</code> to <code>client/.env</code> to enable sign up.
+            Supabase is not configured. Add <code>VITE_SUPABASE_URL</code> and{' '}
+            <code>VITE_SUPABASE_ANON_KEY</code> to <code>client/.env</code> to enable sign up.
           </div>
         )}
 
@@ -115,5 +118,5 @@ export default function Signup() {
         </p>
       </div>
     </div>
-  )
+  );
 }

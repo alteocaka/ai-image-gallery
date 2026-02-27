@@ -1,33 +1,33 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react';
 
 export default function SearchBar({ value: valueProp, onChange }) {
-  const [internalValue, setInternalValue] = useState('')
-  const [searching, setSearching] = useState(false)
+  const [internalValue, setInternalValue] = useState('');
+  const [searching, setSearching] = useState(false);
 
-  const isControlled = valueProp !== undefined && typeof onChange === 'function'
-  const value = (isControlled ? valueProp : internalValue) ?? ''
-  const query = value.trim()
+  const isControlled = valueProp !== undefined && typeof onChange === 'function';
+  const value = (isControlled ? valueProp : internalValue) ?? '';
+  const query = value.trim();
 
   useEffect(() => {
     if (!query) {
-      setSearching(false)
-      return
+      setSearching(false);
+      return;
     }
-    setSearching(true)
-    const t = setTimeout(() => setSearching(false), 400)
-    return () => clearTimeout(t)
-  }, [query])
+    setSearching(true);
+    const t = setTimeout(() => setSearching(false), 400);
+    return () => clearTimeout(t);
+  }, [query]);
 
   const handleChange = (e) => {
-    const next = e.target.value
-    if (isControlled) onChange(next)
-    else setInternalValue(next)
-  }
+    const next = e.target.value;
+    if (isControlled) onChange(next);
+    else setInternalValue(next);
+  };
 
   const handleClear = () => {
-    if (isControlled) onChange('')
-    else setInternalValue('')
-  }
+    if (isControlled) onChange('');
+    else setInternalValue('');
+  };
 
   return (
     <div className="search-bar">
@@ -35,7 +35,9 @@ export default function SearchBar({ value: valueProp, onChange }) {
         {searching ? (
           <span className="search-bar-spinner" aria-hidden />
         ) : (
-          <span className="search-bar-icon" aria-hidden>🔍</span>
+          <span className="search-bar-icon" aria-hidden>
+            🔍
+          </span>
         )}
         <input
           type="search"
@@ -58,5 +60,5 @@ export default function SearchBar({ value: valueProp, onChange }) {
         )}
       </div>
     </div>
-  )
+  );
 }

@@ -1,36 +1,38 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { supabase, isSupabaseConfigured } from '../lib/supabase'
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
 export default function Login() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState(null)
-  const [loading, setLoading] = useState(false)
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e) {
-    e.preventDefault()
-    setError(null)
+    e.preventDefault();
+    setError(null);
     if (!isSupabaseConfigured) {
-      setError('Sign in is disabled. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to client/.env')
-      return
+      setError(
+        'Sign in is disabled. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to client/.env'
+      );
+      return;
     }
     if (!email.trim() || !password) {
-      setError('Please enter email and password.')
-      return
+      setError('Please enter email and password.');
+      return;
     }
-    setLoading(true)
+    setLoading(true);
     try {
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
-      })
-      if (signInError) throw signInError
+      });
+      if (signInError) throw signInError;
       // Success: useAuth + PublicRoute will redirect to /
     } catch (err) {
-      setError(err.message || 'Sign in failed.')
+      setError(err.message || 'Sign in failed.');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -42,7 +44,8 @@ export default function Login() {
 
         {!isSupabaseConfigured && (
           <div className="auth-notice" role="status">
-            Supabase is not configured. Add <code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_ANON_KEY</code> to <code>client/.env</code> to enable sign in.
+            Supabase is not configured. Add <code>VITE_SUPABASE_URL</code> and{' '}
+            <code>VITE_SUPABASE_ANON_KEY</code> to <code>client/.env</code> to enable sign in.
           </div>
         )}
 
@@ -89,5 +92,5 @@ export default function Login() {
         </p>
       </div>
     </div>
-  )
+  );
 }

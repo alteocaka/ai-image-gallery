@@ -18,6 +18,8 @@ A web application where users can upload images, get automatic AI-generated tags
 │   │   ├── pages/         # Auth, Gallery, etc.
 │   │   ├── hooks/         # Custom React hooks
 │   │   ├── lib/           # Supabase client, API helpers
+│   │   ├── test/          # Test setup (setup.js)
+│   │   ├── __tests__/     # Unit tests (*.test.jsx)
 │   │   └── ...
 │   └── package.json
 ├── server/                 # Node.js backend (Express)
@@ -25,6 +27,7 @@ A web application where users can upload images, get automatic AI-generated tags
 │   │   ├── routes/        # API routes
 │   │   ├── services/      # AI, storage, business logic
 │   │   ├── jobs/          # Background AI processing
+│   │   ├── __tests__/     # Unit tests (*.test.js)
 │   │   └── lib/           # Supabase admin, config
 │   └── package.json
 ├── supabase/
@@ -73,6 +76,25 @@ cd client && npm run dev
 
 - Frontend: http://localhost:5173
 - Backend API: http://localhost:3000
+
+### 5. Run tests
+
+Tests use [Vitest](https://vitest.dev/). From the repo root:
+
+```bash
+# Run all tests (client + server) once
+npm test
+
+# Client only (watch mode)
+npm run test:client
+
+# Server only (single run)
+npm run test:server
+```
+
+- **Client:** `client/src/**/*.test.{js,jsx}` — Vitest + React Testing Library + jsdom
+- **Server:** `server/src/**/*.test.js` — Vitest with Node environment
+- Setup: `client/src/test/setup.js` (jest-dom matchers, cleanup)
 
 ## API Keys Needed
 

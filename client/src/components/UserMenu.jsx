@@ -1,31 +1,31 @@
-import { useState, useRef, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../hooks/useAuth'
-import { supabase, isSupabaseConfigured } from '../lib/supabase'
+import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
 export default function UserMenu() {
-  const { user } = useAuth()
-  const navigate = useNavigate()
-  const [open, setOpen] = useState(false)
-  const menuRef = useRef(null)
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
+  const menuRef = useRef(null);
 
   useEffect(() => {
     function handleClickOutside(e) {
-      if (menuRef.current && !menuRef.current.contains(e.target)) setOpen(false)
+      if (menuRef.current && !menuRef.current.contains(e.target)) setOpen(false);
     }
-    if (open) document.addEventListener('click', handleClickOutside)
-    return () => document.removeEventListener('click', handleClickOutside)
-  }, [open])
+    if (open) document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [open]);
 
   async function handleLogout() {
     if (isSupabaseConfigured && supabase) {
-      await supabase.auth.signOut()
+      await supabase.auth.signOut();
     }
-    setOpen(false)
-    navigate('/login')
+    setOpen(false);
+    navigate('/login');
   }
 
-  const label = user?.email ?? (isSupabaseConfigured ? 'Not signed in' : 'Demo mode')
+  const label = user?.email ?? (isSupabaseConfigured ? 'Not signed in' : 'Demo mode');
 
   return (
     <div className="user-menu" ref={menuRef}>
@@ -37,7 +37,9 @@ export default function UserMenu() {
         aria-haspopup="true"
       >
         <span className="user-menu-email">{label}</span>
-        <span className="user-menu-chevron" aria-hidden>▼</span>
+        <span className="user-menu-chevron" aria-hidden>
+          ▼
+        </span>
       </button>
       {open && (
         <div className="user-menu-dropdown">
@@ -48,5 +50,5 @@ export default function UserMenu() {
         </div>
       )}
     </div>
-  )
+  );
 }
