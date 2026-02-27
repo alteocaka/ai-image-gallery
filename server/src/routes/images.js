@@ -199,6 +199,58 @@ router.get('/:id', async (req, res, next) => {
   }
 })
 
+/** PATCH /:id — update description and/or tags (image_metadata), user-scoped */
+router.patch('/:id', async (req, res, next) => {
+  try {
+    const userId = req.userId
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' })
+    }
+
+    const id = Number(req.params.id)
+    if (!Number.isInteger(id) || id <= 0) {
+      return res.status(400).json({ error: 'Invalid image id' })
+    }
+
+    const { description, tags } = req.body || {}
+    const updates = {}
+    if (typeof description === 'string') {
+      updates.description = description.trim() || null
+    }
+    if (Array.isArray(tags)) {
+      updates.tags = tags.filter((t) => typeof t === 'string' && t.trim()).map((t) => t.trim())
+    }
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ error: 'Provide description and/or tags to update' })
+    }
+
+    updates.updated_at = new Date().toISOString()
+
+    const { data: meta, error } = await supabaseAdmin
+      .from('image_metadata')
+      .update(updates)
+      .eq('image_id', id)
+      .eq('user_id', userId)
+      .select('description, tags, updated_at')
+      .single()
+
+    if (error) {
+      throw new Error(error.message)
+    }
+    if (!meta) {
+      return res.status(404).json({ error: 'Image not found' })
+    }
+
+    res.json({
+      description: meta.description ?? null,
+      tags: meta.tags ?? [],
+      updatedAt: meta.updated_at,
+    })
+  } catch (err) {
+    next(err)
+  }
+})
+
 router.delete('/:id', async (req, res, next) => {
   try {
     const userId = req.userId

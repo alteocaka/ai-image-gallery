@@ -58,7 +58,7 @@ export default function Gallery() {
   return (
     <div className="gallery-page">
       <header className="gallery-header">
-        <h1 className="gallery-title">AI Image Gallery</h1>
+        <h1 className="gallery-title">🖼️ AI Image Gallery</h1>
         <UserMenu />
       </header>
       <main className="gallery-main">
@@ -86,6 +86,11 @@ export default function Gallery() {
           onClearSimilar={handleClearSimilar}
           onDeletedFromSimilar={(id) =>
             setSimilarImages((prev) => prev.filter((img) => img.id !== id))
+          }
+          onSimilarImageUpdated={(id, payload) =>
+            setSimilarImages((prev) =>
+              prev.map((img) => (img.id === id ? { ...img, ...payload } : img)),
+            )
           }
         />
       </main>

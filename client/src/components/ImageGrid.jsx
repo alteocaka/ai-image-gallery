@@ -17,7 +17,14 @@ export default function ImageGrid({
   onFindSimilar,
   onClearSimilar,
   onDeletedFromSimilar,
+  onSimilarImageUpdated,
 }) {
+  function handleModalUpdated(id, payload) {
+    setAllImages((prev) =>
+      prev.map((img) => (img.id === id ? { ...img, ...payload } : img)),
+    )
+    onSimilarImageUpdated?.(id, payload)
+  }
   const [allImages, setAllImages] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -151,6 +158,7 @@ export default function ImageGrid({
                   }
                 : undefined
             }
+            onUpdated={handleModalUpdated}
             onDeleted={(deletedId) => {
               setSelected(null)
               setAllImages((prev) => prev.filter((img) => img.id !== deletedId))
@@ -260,6 +268,7 @@ export default function ImageGrid({
                 }
               : undefined
           }
+          onUpdated={handleModalUpdated}
           onDeleted={(deletedId) => {
             setSelected(null)
             setAllImages((prev) => prev.filter((img) => img.id !== deletedId))
