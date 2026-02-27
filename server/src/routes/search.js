@@ -42,9 +42,84 @@ function colorOverlap(refColors, otherColors) {
   return match / refSet.size
 }
 
-router.get('/text', (req, res) => {
-  // TODO: Query by tags or description, user-scoped, paginated
-  res.json({ results: [] })
+const PER_PAGE_DEFAULT = 20
+const PER_PAGE_MAX = 50
+
+/** GET /search/text?q=...&page=1&per_page=20 — search by filename, tags, description (user-scoped, paginated) */
+router.get('/text', async (req, res, next) => {
+  try {
+    const userId = req.userId
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' })
+    }
+
+    const q = (req.query.q || '').trim().toLowerCase()
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1)
+    const perPage = Math.min(PER_PAGE_MAX, Math.max(1, parseInt(req.query.per_page, 10) || PER_PAGE_DEFAULT))
+
+    if (!q) {
+      return res.json({
+        images: [],
+        page: 1,
+        perPage,
+        total: 0,
+        totalPages: 1,
+      })
+    }
+
+    // Fetch all user images with metadata so we can filter by filename, description, tags
+    const { data: rows, error } = await supabaseAdmin
+      .from('images')
+      .select(
+        'id, user_id, filename, original_path, thumbnail_path, uploaded_at, image_metadata(id, description, tags, colors, ai_processing_status)',
+      )
+      .eq('user_id', userId)
+      .order('uploaded_at', { ascending: false })
+
+    if (error) throw new Error(error.message)
+
+    const matching = (rows || []).filter((row) => {
+      const meta = Array.isArray(row.image_metadata) ? row.image_metadata[0] : row.image_metadata
+      const filename = (row.filename || '').toLowerCase()
+      const description = (meta?.description || '').toLowerCase()
+      const tags = (meta?.tags || []).map((t) => String(t).toLowerCase())
+      return (
+        filename.includes(q) ||
+        description.includes(q) ||
+        tags.some((t) => t.includes(q))
+      )
+    })
+
+    const total = matching.length
+    const totalPages = Math.max(1, Math.ceil(total / perPage))
+    const from = (page - 1) * perPage
+    const pageRows = matching.slice(from, from + perPage)
+
+    const images = pageRows.map((row) => {
+      const meta = Array.isArray(row.image_metadata) ? row.image_metadata[0] : row.image_metadata
+      return {
+        id: row.id,
+        filename: row.filename,
+        originalUrl: getPublicUrl(row.original_path),
+        thumbnailUrl: getPublicUrl(row.thumbnail_path),
+        uploadedAt: row.uploaded_at,
+        description: meta?.description ?? null,
+        tags: meta?.tags ?? [],
+        colors: meta?.colors ?? [],
+        aiStatus: meta?.ai_processing_status ?? 'pending',
+      }
+    })
+
+    res.json({
+      images,
+      page,
+      perPage,
+      total,
+      totalPages,
+    })
+  } catch (err) {
+    next(err)
+  }
 })
 
 router.get('/similar/:imageId', async (req, res, next) => {

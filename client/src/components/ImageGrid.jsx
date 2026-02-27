@@ -27,6 +27,8 @@ export default function ImageGrid({
 
   const isSimilarMode = similarToImageId != null
 
+  const searchQ = searchQuery.trim()
+
   useEffect(() => {
     if (isSimilarMode) return
     let cancelled = false
@@ -34,7 +36,10 @@ export default function ImageGrid({
       setLoading(true)
       setError(null)
       try {
-        const data = await api(`/images?page=${currentPage}&per_page=${PER_PAGE}`)
+        const url = searchQ
+          ? `/search/text?q=${encodeURIComponent(searchQ)}&page=${currentPage}&per_page=${PER_PAGE}`
+          : `/images?page=${currentPage}&per_page=${PER_PAGE}`
+        const data = await api(url)
         if (cancelled) return
         setAllImages(Array.isArray(data.images) ? data.images : [])
         setTotalPagesFromServer(data.totalPages || 1)
@@ -50,24 +55,16 @@ export default function ImageGrid({
     return () => {
       cancelled = true
     }
-  }, [currentPage, refreshKey, isSimilarMode])
+  }, [currentPage, refreshKey, isSimilarMode, searchQ])
 
+  // Server does text search when searchQ is set; we only filter by color client-side
   const filtered = useMemo(() => {
     let list = allImages
-    const q = searchQuery.trim().toLowerCase()
-    if (q) {
-      list = list.filter(
-        (img) =>
-          (img.filename && img.filename.toLowerCase().includes(q)) ||
-          (img.description && img.description.toLowerCase().includes(q)) ||
-          (Array.isArray(img.tags) && img.tags.some((t) => t.toLowerCase().includes(q))),
-      )
-    }
     if (selectedColor) {
       list = list.filter((img) => Array.isArray(img.colors) && img.colors.includes(selectedColor))
     }
     return list
-  }, [allImages, searchQuery, selectedColor])
+  }, [allImages, selectedColor])
 
   // Derive available colors from current images and inform parent (Gallery)
   useEffect(() => {
@@ -77,8 +74,8 @@ export default function ImageGrid({
     onColorsChange(unique.slice(0, 24))
   }, [allImages, onColorsChange])
 
-  const noFilters = !searchQuery.trim() && !selectedColor
-  const totalPages = noFilters ? totalPagesFromServer : Math.max(1, Math.ceil(filtered.length / PER_PAGE))
+  const hasColorFilter = !!selectedColor
+  const totalPages = hasColorFilter ? Math.max(1, Math.ceil(filtered.length / PER_PAGE)) : totalPagesFromServer
   const pageImages = useMemo(() => {
     const start = (currentPage - 1) * PER_PAGE
     return filtered.slice(start, start + PER_PAGE)
@@ -187,11 +184,11 @@ export default function ImageGrid({
     )
   }
 
-  if (filtered.length === 0) {
+  if (pageImages.length === 0) {
     return (
       <div className="image-grid-wrap">
         <div className="image-grid-empty">
-          {hasActiveFilters ? (
+          {hasActiveFilters || searchQ ? (
             <>
               <p>No images match your search or filters.</p>
               {typeof onClearFilters === 'function' && (
