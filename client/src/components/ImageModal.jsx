@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { api } from '@/lib/api';
+import { api, apiBlob } from '@/lib/api';
 
 export default function ImageModal({ image, onClose, onFindSimilar, onDeleted, onUpdated }) {
   const [current, setCurrent] = useState(image || null);
@@ -10,6 +10,7 @@ export default function ImageModal({ image, onClose, onFindSimilar, onDeleted, o
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [confirming, setConfirming] = useState(false);
 
   useEffect(() => {
@@ -140,6 +141,24 @@ export default function ImageModal({ image, onClose, onFindSimilar, onDeleted, o
     } catch (err) {
       console.error('Failed to delete image', err);
       setDeleting(false);
+    }
+  }
+
+  async function handleDownload() {
+    if (!current?.id || downloading) return;
+    try {
+      setDownloading(true);
+      const blob = await apiBlob(`/images/${current.id}/download`);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename || 'image';
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Download failed', err);
+    } finally {
+      setDownloading(false);
     }
   }
 
@@ -282,6 +301,34 @@ export default function ImageModal({ image, onClose, onFindSimilar, onDeleted, o
                   </svg>
                 </button>
               )}
+              <button
+                type="button"
+                className="image-modal-action-btn image-modal-action-download"
+                onClick={handleDownload}
+                disabled={downloading}
+                aria-label="Download image"
+                title="Download image"
+              >
+                {downloading ? (
+                  <span className="image-modal-action-spinner" aria-hidden />
+                ) : (
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden
+                  >
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                  </svg>
+                )}
+              </button>
               <button
                 type="button"
                 className="image-modal-action-btn image-modal-action-delete"

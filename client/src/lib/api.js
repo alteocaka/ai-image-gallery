@@ -45,6 +45,23 @@ export async function api(path, options = {}) {
 }
 
 /**
+ * Fetch a binary response (e.g. image download). Returns the response Blob.
+ * Use for endpoints that return file content with Content-Disposition: attachment.
+ */
+export async function apiBlob(path) {
+  const url = `${getBaseUrl()}/api${path}`;
+  const authHeaders = await getAuthHeaders();
+  const res = await fetch(url, { headers: { ...authHeaders } });
+  if (!res.ok) {
+    const err = new Error(res.statusText);
+    err.status = res.status;
+    err.body = await res.json().catch(() => ({}));
+    throw err;
+  }
+  return res.blob();
+}
+
+/**
  * Upload FormData with progress reporting. Uses XHR so we can listen to upload progress.
  * @param {string} path - API path (e.g. '/images/upload')
  * @param {FormData} formData

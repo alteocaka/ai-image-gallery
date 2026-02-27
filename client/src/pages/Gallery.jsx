@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import ThemeToggle from '@/components/ThemeToggle';
 import UserMenu from '@/components/UserMenu';
 import SearchBar from '@/components/SearchBar';
 import ColorFilter from '@/components/ColorFilter';
@@ -59,7 +60,10 @@ export default function Gallery() {
     <div className="gallery-page">
       <header className="gallery-header">
         <h1 className="gallery-title">🖼️ AI Image Gallery</h1>
-        <UserMenu />
+        <div className="gallery-header-actions">
+          <ThemeToggle />
+          <UserMenu />
+        </div>
       </header>
       <main className="gallery-main">
         <SearchBar value={searchQuery} onChange={setSearchQuery} />

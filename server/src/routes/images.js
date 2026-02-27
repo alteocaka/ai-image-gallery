@@ -6,6 +6,7 @@ import {
   uploadThumbnail,
   getPublicUrl,
   deleteFromStorage,
+  downloadFromStorage,
   uniqueSuffix,
 } from '../services/storageService.js';
 import { processImageJob } from '../jobs/processImage.js';
@@ -159,6 +160,46 @@ router.get('/', async (req, res, next) => {
       total,
       totalPages,
     });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/** GET /:id/download — stream original image with Content-Disposition: attachment to force download */
+router.get('/:id/download', async (req, res, next) => {
+  try {
+    const userId = req.userId;
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) {
+      return res.status(400).json({ error: 'Invalid image id' });
+    }
+
+    const { data: image, error } = await supabaseAdmin
+      .from('images')
+      .select('id, user_id, original_path, filename')
+      .eq('id', id)
+      .eq('user_id', userId)
+      .single();
+
+    if (error && error.code !== 'PGRST116') {
+      throw new Error(error.message);
+    }
+    if (!image) {
+      return res.status(404).json({ error: 'Image not found' });
+    }
+
+    const buffer = await downloadFromStorage(image.original_path);
+    const rawName = image.filename || 'image.jpg';
+    const filename = rawName.replace(/["\r\n]/g, '_');
+    const ext = filename.toLowerCase().endsWith('.png') ? 'image/png' : 'image/jpeg';
+
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Type', ext);
+    res.send(buffer);
   } catch (err) {
     next(err);
   }
