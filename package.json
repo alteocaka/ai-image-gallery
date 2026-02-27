@@ -6,6 +6,8 @@
     "dev:client": "npm run dev --prefix client",
     "dev:server": "npm run dev --prefix server",
     "build:client": "npm run build --prefix client",
-    "install:all": "npm install && npm install --prefix client && npm install --prefix server"
+    "install:all": "npm install && npm install --prefix client && npm install --prefix server",
+    "test": "npm run test:run --prefix client",
+    "test:watch": "npm run test --prefix client"
   }
 }
