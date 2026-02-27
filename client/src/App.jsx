@@ -1,24 +1,9 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { useAuth } from './hooks/useAuth';
-import { isSupabaseConfigured } from './lib/supabase';
-
-import Login from './pages/Login';
-import Signup from './pages/Signup';
-import Gallery from './pages/Gallery';
-
-function ProtectedRoute({ children }) {
-  const { user, loading } = useAuth();
-  if (loading) return <div className="app-loading">Loading…</div>;
-  if (isSupabaseConfigured && !user) return <Navigate to="/login" replace />;
-  return children;
-}
-
-function PublicRoute({ children }) {
-  const { user, loading } = useAuth();
-  if (loading) return <div className="app-loading">Loading…</div>;
-  if (user) return <Navigate to="/" replace />;
-  return children;
-}
+import ProtectedRoute from '@/components/ProtectedRoute';
+import PublicRoute from '@/components/PublicRoute';
+import Login from '@/pages/Login';
+import Signup from '@/pages/Signup';
+import Gallery from '@/pages/Gallery';
 
 export default function App() {
   return (

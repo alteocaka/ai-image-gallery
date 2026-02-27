@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
-import UserMenu from '../components/UserMenu';
-import SearchBar from '../components/SearchBar';
-import ColorFilter from '../components/ColorFilter';
-import UploadZone from '../components/UploadZone';
-import ImageGrid from '../components/ImageGrid';
-import { api } from '../lib/api';
-import { isSupabaseConfigured } from '../lib/supabase';
+import UserMenu from '@/components/UserMenu';
+import SearchBar from '@/components/SearchBar';
+import ColorFilter from '@/components/ColorFilter';
+import UploadZone from '@/components/UploadZone';
+import ImageGrid from '@/components/ImageGrid';
+import { api } from '@/lib/api';
+import { isSupabaseConfigured } from '@/lib/supabase';
 
 export default function Gallery() {
   const [searchQuery, setSearchQuery] = useState('');

@@ -1,8 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
-import { api } from '../lib/api';
-import ImageModal from './ImageModal';
-
-const PER_PAGE = 20;
+import { api } from '@/lib/api';
+import ImageModal from '@/components/ImageModal';
+import { PER_PAGE } from '@/constants';
 
 export default function ImageGrid({
   searchQuery = '',

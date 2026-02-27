@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 
 export default function UserMenu() {
   const { user } = useAuth();

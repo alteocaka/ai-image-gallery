@@ -1,8 +1,6 @@
 import { useState, useCallback } from 'react';
-import { uploadWithProgress } from '../lib/api';
-
-const ACCEPT_STR = 'image/jpeg,image/png';
-const MAX_FILES = 10;
+import { uploadWithProgress } from '@/lib/api';
+import { ACCEPT_IMAGE_TYPES, MAX_FILES } from '@/constants';
 
 export default function UploadZone({ onUploaded }) {
   const [dragging, setDragging] = useState(false);
@@ -94,7 +92,7 @@ export default function UploadZone({ onUploaded }) {
       >
         <input
           type="file"
-          accept={ACCEPT_STR}
+          accept={ACCEPT_IMAGE_TYPES}
           multiple
           onChange={handleChange}
           className="upload-zone-input"
