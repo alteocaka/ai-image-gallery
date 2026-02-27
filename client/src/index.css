@@ -906,7 +906,6 @@ body {
   object-fit: cover;
   object-position: center center;
   display: block;
-  vertical-align: bottom;
 }
 
 .image-modal-meta {
