@@ -42,6 +42,10 @@ router.post('/upload', upload.array('images', 10), async (req, res, next) => {
       return res.status(400).json({ error: 'No images uploaded' });
     }
 
+    const aiProvider = req.body?.aiProvider === 'openai' ? 'openai' : 'gemini';
+    const aiModel = typeof req.body?.aiModel === 'string' ? req.body.aiModel.trim() || undefined : undefined;
+    const aiOptions = { provider: aiProvider, model: aiModel };
+
     const created = [];
 
     for (const file of files) {
@@ -86,7 +90,7 @@ router.post('/upload', upload.array('images', 10), async (req, res, next) => {
       const originalUrl = getPublicUrl(original_path);
       const thumbUrl = getPublicUrl(thumbnail_path);
 
-      processImageJob(imageInsert.id, userId, original_path, file.mimetype).catch((err) => {
+      processImageJob(imageInsert.id, userId, original_path, file.mimetype, aiOptions).catch((err) => {
         console.error('processImageJob error', err);
       });
 

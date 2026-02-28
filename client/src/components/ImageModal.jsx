@@ -60,6 +60,8 @@ export default function ImageModal({ image, onClose, onFindSimilar, onDeleted, o
 
   const fullUrl = originalUrl || original_url;
   const isDone = aiStatus === 'completed';
+  const isFailed = aiStatus === 'failed';
+  const isPending = aiStatus === 'pending';
 
   function removeTag(index) {
     setEditTags((prev) => prev.filter((_, i) => i !== index));
@@ -194,9 +196,22 @@ export default function ImageModal({ image, onClose, onFindSimilar, onDeleted, o
             )}
           </div>
           <div className="image-modal-meta">
-            {isDone ? (
+            {isFailed && (
+              <div className="image-modal-ai-failed" role="alert">
+                <span className="image-modal-ai-failed-icon" aria-hidden>⚠</span>
+                <p className="image-modal-ai-failed-text">
+                  AI analysis couldn&apos;t be completed (e.g. service limit). Add a description and tags below so you can search and find similar images.
+                </p>
+              </div>
+            )}
+            {isDone || isFailed ? (
               <>
                 {description && <p className="image-modal-description">{description}</p>}
+                {isFailed && !description && (
+                  <p className="image-modal-description image-modal-description--muted">
+                    No description yet.
+                  </p>
+                )}
                 <div className="image-modal-tags">
                   <span className="image-modal-label">Tags</span>
                   {tags.length > 0 ? (
@@ -208,7 +223,9 @@ export default function ImageModal({ image, onClose, onFindSimilar, onDeleted, o
                       ))}
                     </ul>
                   ) : (
-                    <p className="image-modal-tags-empty">No tags yet.</p>
+                    <p className="image-modal-tags-empty">
+                      {isFailed ? 'No tags yet — add some below.' : 'No tags yet.'}
+                    </p>
                   )}
                 </div>
               </>
@@ -228,7 +245,7 @@ export default function ImageModal({ image, onClose, onFindSimilar, onDeleted, o
                 </div>
               </>
             )}
-            {isDone ? (
+            {(isDone || isFailed) ? (
               colors.length > 0 && (
                 <div className="image-modal-colors">
                   <span className="image-modal-label">Colors</span>
@@ -245,7 +262,7 @@ export default function ImageModal({ image, onClose, onFindSimilar, onDeleted, o
                   </div>
                 </div>
               )
-            ) : (
+            ) : isPending ? (
               <div className="image-modal-colors">
                 <span className="image-modal-label">Colors</span>
                 <div className="image-modal-color-swatches">
@@ -254,7 +271,7 @@ export default function ImageModal({ image, onClose, onFindSimilar, onDeleted, o
                   ))}
                 </div>
               </div>
-            )}
+            ) : null}
             {downloadError && (
               <p className="image-modal-save-error" role="alert">
                 {downloadError}
@@ -285,14 +302,14 @@ export default function ImageModal({ image, onClose, onFindSimilar, onDeleted, o
                   <span>Find similar images</span>
                 </button>
               )}
-              {isDone && (
+              {(isDone || isFailed) && (
                 <button
                   type="button"
                   className="image-modal-action-btn image-modal-action-edit"
                   onClick={() => setEditing(true)}
                   disabled={deleting}
                   aria-label="Edit description and tags"
-                  title="Edit description and tags"
+                  title={isFailed ? 'Add description and tags' : 'Edit description and tags'}
                 >
                   <svg
                     width="18"

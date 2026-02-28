@@ -1,8 +1,10 @@
 import { useState, useCallback } from 'react';
 import { uploadWithProgress } from '@/lib/api';
+import { useAISettings } from '@/contexts/AISettingsContext';
 import { ACCEPT_IMAGE_TYPES, MAX_FILES } from '@/constants';
 
 export default function UploadZone({ onUploaded }) {
+  const { getSettingsForUpload } = useAISettings();
   const [dragging, setDragging] = useState(false);
   const [files, setFiles] = useState([]);
   const [error, setError] = useState(null);
@@ -61,6 +63,9 @@ export default function UploadZone({ onUploaded }) {
       files.forEach((file) => {
         formData.append('images', file);
       });
+      const { aiProvider, aiModel } = getSettingsForUpload();
+      formData.append('aiProvider', aiProvider);
+      formData.append('aiModel', aiModel || '');
       const result = await uploadWithProgress('/images/upload', formData, (percent) =>
         setUploadProgress(percent)
       );
