@@ -140,6 +140,10 @@ Runs Prettier on README, server source, and client source.
 - **Export as JSON:** In the profile menu, export all your gallery images (metadata: description, tags, colors, URLs) as a JSON file for backup or use elsewhere
 - **Code:** Path alias `@/`, shared AuthLayout, AISettingsContext, constants (including AI provider/model lists), Prettier
 
+## Documentation
+
+- **[AI Service Comparison](docs/ai-service-comparison.md)** — Comparison of Google Gemini, OpenAI GPT-4 Vision, Anthropic Claude, Azure Computer Vision, and AWS Rekognition (input/output, pricing, limits). Documents why Gemini and OpenAI were chosen and trade-offs.
+
 ## Architecture Decisions
 
 - **React + Vite:** Fast dev experience and builds.
