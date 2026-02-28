@@ -10,7 +10,9 @@ export default function ImageModal({ image, onClose, onFindSimilar, onDeleted, o
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
   const [downloading, setDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState(null);
   const [confirming, setConfirming] = useState(false);
 
   useEffect(() => {
@@ -130,6 +132,7 @@ export default function ImageModal({ image, onClose, onFindSimilar, onDeleted, o
 
   async function performDelete() {
     if (!current?.id || deleting) return;
+    setDeleteError(null);
     try {
       setDeleting(true);
       await api(`/images/${current.id}`, { method: 'DELETE' });
@@ -139,13 +142,14 @@ export default function ImageModal({ image, onClose, onFindSimilar, onDeleted, o
         onClose();
       }
     } catch (err) {
-      console.error('Failed to delete image', err);
+      setDeleteError(err?.body?.error || err.message || 'Failed to delete image');
       setDeleting(false);
     }
   }
 
   async function handleDownload() {
     if (!current?.id || downloading) return;
+    setDownloadError(null);
     try {
       setDownloading(true);
       const blob = await apiBlob(`/images/${current.id}/download`);
@@ -156,7 +160,7 @@ export default function ImageModal({ image, onClose, onFindSimilar, onDeleted, o
       a.click();
       URL.revokeObjectURL(url);
     } catch (err) {
-      console.error('Download failed', err);
+      setDownloadError(err?.body?.error || err.message || 'Download failed');
     } finally {
       setDownloading(false);
     }
@@ -250,6 +254,11 @@ export default function ImageModal({ image, onClose, onFindSimilar, onDeleted, o
                   ))}
                 </div>
               </div>
+            )}
+            {downloadError && (
+              <p className="image-modal-save-error" role="alert">
+                {downloadError}
+              </p>
             )}
             <div className="image-modal-actions">
               {onFindSimilar && (
@@ -438,22 +447,34 @@ export default function ImageModal({ image, onClose, onFindSimilar, onDeleted, o
               </div>
             </div>
           )}
-          {confirming && !deleting && (
+          {confirming && (
             <div
               className="image-modal-confirm-backdrop"
               onClick={(e) => {
-                if (e.target === e.currentTarget) setConfirming(false);
+                if (e.target === e.currentTarget && !deleting) {
+                  setConfirming(false);
+                  setDeleteError(null);
+                }
               }}
             >
               <div className="image-modal-confirm">
                 <p className="image-modal-confirm-text">
                   Delete this image? This action cannot be undone.
                 </p>
+                {deleteError && (
+                  <p className="image-modal-save-error" role="alert">
+                    {deleteError}
+                  </p>
+                )}
                 <div className="image-modal-confirm-actions">
                   <button
                     type="button"
                     className="image-modal-confirm-cancel"
-                    onClick={() => setConfirming(false)}
+                    onClick={() => {
+                      setConfirming(false);
+                      setDeleteError(null);
+                    }}
+                    disabled={deleting}
                   >
                     Cancel
                   </button>
@@ -461,8 +482,9 @@ export default function ImageModal({ image, onClose, onFindSimilar, onDeleted, o
                     type="button"
                     className="image-modal-confirm-delete"
                     onClick={performDelete}
+                    disabled={deleting}
                   >
-                    Delete
+                    {deleting ? 'Deleting…' : 'Delete'}
                   </button>
                 </div>
               </div>

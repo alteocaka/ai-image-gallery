@@ -10,11 +10,14 @@ export default function ImageGrid({
   hasActiveFilters = false,
   refreshKey = 0,
   onColorsChange,
+  onLoadingChange,
   similarImages = [],
   similarToImageId = null,
   similarLoading = false,
+  similarError = null,
   onFindSimilar,
   onClearSimilar,
+  onRetrySimilar,
   onDeletedFromSimilar,
   onSimilarImageUpdated,
 }) {
@@ -61,11 +64,32 @@ export default function ImageGrid({
     };
   }, [currentPage, refreshKey, isSimilarMode, searchQ]);
 
+  // Report loading state so parent can show color filter skeleton
+  useEffect(() => {
+    if (typeof onLoadingChange === 'function' && !isSimilarMode) {
+      onLoadingChange(loading);
+    }
+  }, [loading, isSimilarMode, onLoadingChange]);
+
+  /** Normalize hex for comparison (case-insensitive, #abc -> #AABBCC) */
+  function normalizeHex(hex) {
+    if (!hex || typeof hex !== 'string') return '';
+    const s = String(hex).replace(/^#/, '').trim();
+    if (s.length === 3)
+      return (s[0] + s[0] + s[1] + s[1] + s[2] + s[2]).toUpperCase();
+    return s.slice(0, 6).toUpperCase();
+  }
+
   // Server does text search when searchQ is set; we only filter by color client-side
   const filtered = useMemo(() => {
     let list = allImages;
     if (selectedColor) {
-      list = list.filter((img) => Array.isArray(img.colors) && img.colors.includes(selectedColor));
+      const normalizedSelected = normalizeHex(selectedColor);
+      list = list.filter(
+        (img) =>
+          Array.isArray(img.colors) &&
+          img.colors.some((c) => normalizeHex(c) === normalizedSelected)
+      );
     }
     return list;
   }, [allImages, selectedColor]);
@@ -115,7 +139,21 @@ export default function ImageGrid({
           </button>
         </div>
         <div className="image-grid-wrap">
-          {similarImages.length === 0 ? (
+          {similarError ? (
+            <div className="image-grid-empty">
+              <p>{similarError}</p>
+              <div className="image-grid-empty-actions">
+                {typeof onRetrySimilar === 'function' && (
+                  <button type="button" className="image-grid-empty-clear" onClick={onRetrySimilar}>
+                    Try again
+                  </button>
+                )}
+                <button type="button" className="image-grid-empty-clear" onClick={onClearSimilar}>
+                  Back to gallery
+                </button>
+              </div>
+            </div>
+          ) : similarImages.length === 0 ? (
             <div className="image-grid-empty">
               <p>No similar images found.</p>
               <button type="button" className="image-grid-empty-clear" onClick={onClearSimilar}>
@@ -189,7 +227,7 @@ export default function ImageGrid({
     return (
       <div className="image-grid-wrap">
         <div className="image-grid-empty">
-          {hasActiveFilters || searchQ ? (
+          {hasActiveFilters ? (
             <>
               <p>No images match your search or filters.</p>
               {typeof onClearFilters === 'function' && (
@@ -208,6 +246,14 @@ export default function ImageGrid({
 
   return (
     <>
+      {hasActiveFilters && typeof onClearFilters === 'function' && (
+        <div className="similar-bar">
+          <span className="similar-bar-label">Filters active</span>
+          <button type="button" className="similar-bar-back" onClick={onClearFilters}>
+            Clear filters
+          </button>
+        </div>
+      )}
       <div className="image-grid-wrap">
         <ul className="image-grid" role="list">
           {pageImages.map((img) => (

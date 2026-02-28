@@ -16,6 +16,8 @@ export default function Gallery() {
   const [similarImages, setSimilarImages] = useState([]);
   const [similarToImageId, setSimilarToImageId] = useState(null);
   const [similarLoading, setSimilarLoading] = useState(false);
+  const [similarError, setSimilarError] = useState(null);
+  const [gridLoading, setGridLoading] = useState(true);
 
   // Verify backend session (JWT round-trip) when logged in
   useEffect(() => {
@@ -40,11 +42,12 @@ export default function Gallery() {
     setSimilarLoading(true);
     setSimilarToImageId(imageId);
     setSimilarImages([]);
+    setSimilarError(null);
     try {
       const data = await api(`/search/similar/${imageId}`);
       setSimilarImages(Array.isArray(data.images) ? data.images : []);
     } catch (err) {
-      console.error('Find similar failed', err);
+      setSimilarError(err?.body?.error || err.message || 'Failed to load similar images');
       setSimilarImages([]);
     } finally {
       setSimilarLoading(false);
@@ -54,6 +57,7 @@ export default function Gallery() {
   function handleClearSimilar() {
     setSimilarToImageId(null);
     setSimilarImages([]);
+    setSimilarError(null);
   }
 
   return (
@@ -71,6 +75,7 @@ export default function Gallery() {
           selectedColor={selectedColor}
           colors={availableColors}
           onSelectColor={setSelectedColor}
+          loading={gridLoading && !similarToImageId}
         />
         <UploadZone onUploaded={handleUploaded} />
         <ImageGrid
@@ -80,11 +85,14 @@ export default function Gallery() {
           hasActiveFilters={hasActiveFilters}
           refreshKey={gridRefreshKey}
           onColorsChange={setAvailableColors}
+          onLoadingChange={setGridLoading}
           similarImages={similarImages}
           similarToImageId={similarToImageId}
           similarLoading={similarLoading}
+          similarError={similarError}
           onFindSimilar={handleFindSimilar}
           onClearSimilar={handleClearSimilar}
+          onRetrySimilar={() => similarToImageId && handleFindSimilar(similarToImageId)}
           onDeletedFromSimilar={(id) =>
             setSimilarImages((prev) => prev.filter((img) => img.id !== id))
           }

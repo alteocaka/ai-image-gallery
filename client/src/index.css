@@ -157,6 +157,60 @@ body {
   text-decoration: underline;
 }
 
+/* Error boundary fallback */
+.error-boundary {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+  background: #f8fafc;
+}
+
+.error-boundary-title {
+  margin: 0 0 0.5rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.error-boundary-message {
+  margin: 0 0 1.5rem;
+  font-size: 1rem;
+  color: #64748b;
+  max-width: 24rem;
+}
+
+.error-boundary-retry {
+  padding: 0.5rem 1rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #fff;
+  background: #0f3460;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.error-boundary-retry:hover {
+  background: #16213e;
+}
+
+[data-theme='dark'] .error-boundary {
+  background: #0f172a;
+}
+
+[data-theme='dark'] .error-boundary-title {
+  color: #f1f5f9;
+}
+
+[data-theme='dark'] .error-boundary-message {
+  color: #94a3b8;
+}
+
 /* App loading */
 .app-loading {
   min-height: 100vh;
@@ -436,6 +490,16 @@ body {
 .color-filter-swatch--active {
   border-color: #1e293b;
   box-shadow: 0 0 0 2px #fff, 0 0 0 4px #1e293b;
+}
+
+.color-filter-swatch--skeleton {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shine 1.2s ease-in-out infinite;
+  pointer-events: none;
 }
 
 /* Upload zone */
@@ -749,6 +813,13 @@ body {
 
 .image-grid-empty p {
   margin: 0;
+}
+
+.image-grid-empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
 }
 
 .image-grid-empty-clear {
@@ -1479,6 +1550,11 @@ body {
 [data-theme='dark'] .color-filter-swatch--active {
   border-color: #f1f5f9;
   box-shadow: 0 0 0 2px #1e293b, 0 0 0 4px #f1f5f9;
+}
+
+[data-theme='dark'] .color-filter-swatch--skeleton {
+  background: linear-gradient(90deg, #334155 25%, #475569 50%, #334155 75%);
+  background-size: 200% 100%;
 }
 
 [data-theme='dark'] .upload-zone-drop {
