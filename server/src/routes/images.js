@@ -172,6 +172,54 @@ router.get('/', async (req, res, next) => {
   }
 });
 
+/** GET /export — return all user images as JSON for download */
+router.get('/export', async (req, res, next) => {
+  try {
+    const userId = req.userId;
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const limit = Math.min(5000, parseInt(req.query.limit, 10) || 5000);
+    const { data, error } = await supabaseAdmin
+      .from('images')
+      .select(
+        'id, user_id, filename, original_path, thumbnail_path, uploaded_at, image_metadata(id, description, tags, colors, ai_processing_status)'
+      )
+      .eq('user_id', userId)
+      .order('uploaded_at', { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    const images = (data || []).map((row) => {
+      const meta = Array.isArray(row.image_metadata) ? row.image_metadata[0] : row.image_metadata;
+      return {
+        id: row.id,
+        filename: row.filename,
+        originalUrl: getPublicUrl(row.original_path),
+        thumbnailUrl: getPublicUrl(row.thumbnail_path),
+        uploadedAt: row.uploaded_at,
+        description: meta?.description ?? null,
+        tags: meta?.tags ?? [],
+        colors: meta?.colors ?? [],
+        aiStatus: meta?.ai_processing_status ?? 'pending',
+      };
+    });
+
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="gallery-export-${new Date().toISOString().slice(0, 10)}.json"`
+    );
+    res.json(images);
+  } catch (err) {
+    next(err);
+  }
+});
+
 /** GET /:id/download — stream original image with Content-Disposition: attachment to force download */
 router.get('/:id/download', async (req, res, next) => {
   try {

@@ -131,6 +131,7 @@ Runs Prettier on README, server source, and client source.
 - **AI providers:** Choose **Google Gemini** or **OpenAI** (and model) in the profile dropdown; selection stored in localStorage and used for new uploads
 - **Image modal:** View full image, description, tags, colors; edit description/tags; find similar; download; delete. If AI analysis fails (e.g. quota), a message prompts you to add description and tags manually
 - **Dark mode:** Toggle in navbar (persisted in localStorage)
+- **Export as JSON:** In the profile menu, export all your gallery images (metadata: description, tags, colors, URLs) as a JSON file for backup or use elsewhere
 - **Code:** Path alias `@/`, shared AuthLayout, AISettingsContext, constants (including AI provider/model lists), Prettier
 
 ## Architecture Decisions
@@ -145,5 +146,4 @@ Runs Prettier on README, server source, and client source.
 ## Potential Improvements
 
 - Deploy to Vercel (frontend) + Railway/Render (backend)
-- Export search results as JSON
 - More client unit tests

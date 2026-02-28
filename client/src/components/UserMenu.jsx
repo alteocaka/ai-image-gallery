@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { useAISettings } from '@/contexts/AISettingsContext';
+import { api } from '@/lib/api';
 import { AI_PROVIDERS, AI_MODELS } from '@/constants';
 
 export default function UserMenu() {
@@ -10,6 +11,8 @@ export default function UserMenu() {
   const navigate = useNavigate();
   const { aiProvider, aiModel, setAiProvider, setAiModel, initialized } = useAISettings();
   const [open, setOpen] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState(null);
   const menuRef = useRef(null);
 
   useEffect(() => {
@@ -37,6 +40,26 @@ export default function UserMenu() {
 
   function handleModelChange(e) {
     setAiModel(e.target.value);
+  }
+
+  async function handleExportJson() {
+    setExportError(null);
+    setExporting(true);
+    try {
+      const data = await api('/images/export');
+      const json = JSON.stringify(Array.isArray(data) ? data : [], null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `gallery-export-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setExportError(err?.body?.error || err.message || 'Export failed');
+    } finally {
+      setExporting(false);
+    }
   }
 
   const label = user?.email ?? (isSupabaseConfigured ? 'Not signed in' : 'Demo mode');
@@ -69,7 +92,7 @@ export default function UserMenu() {
         <div className="user-menu-dropdown">
           <div className="user-menu-email-line">{label}</div>
           <div className="user-menu-section">
-            <span className="user-menu-section-label">AI for new images</span>
+            <span className="user-menu-section-label">AI Settings</span>
             <div className="user-menu-settings">
               <label className="user-menu-field">
                 <span className="user-menu-field-label">Provider</span>
@@ -103,6 +126,19 @@ export default function UserMenu() {
               </label>
             </div>
           </div>
+          <button
+            type="button"
+            className="user-menu-item"
+            onClick={handleExportJson}
+            disabled={exporting}
+          >
+            {exporting ? 'Exporting…' : 'Export as JSON'}
+          </button>
+          {exportError && (
+            <p className="user-menu-export-error" role="alert">
+              {exportError}
+            </p>
+          )}
           <button type="button" className="user-menu-logout" onClick={handleLogout}>
             Log out
           </button>
