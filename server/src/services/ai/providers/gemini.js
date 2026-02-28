@@ -1,10 +1,10 @@
 /**
  * Gemini (Google AI Studio) provider for image analysis.
- * Env: AI_API_KEY or GEMINI_API_KEY, GEMINI_MODEL (optional, default gemini-2.0-flash)
+ * Env: AI_API_KEY or GEMINI_API_KEY, GEMINI_MODEL (optional, default gemini-2.5-flash)
  */
 
 const API_KEY = process.env.AI_API_KEY || process.env.GEMINI_API_KEY;
-const DEFAULT_MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
+const DEFAULT_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 
 const PROMPT = `You are an image analysis assistant.
 

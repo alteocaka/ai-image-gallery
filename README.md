@@ -75,7 +75,7 @@ Copy `client/.env.example` to `client/.env` and `server/.env.example` to `server
 
 - **Client:** `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
 - **Server:** `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_JWT_SECRET`, and at least one AI provider:
-  - **Gemini (default):** `AI_API_KEY` or `GEMINI_API_KEY`; optional `GEMINI_MODEL` (e.g. `gemini-2.0-flash`)
+  - **Gemini (default):** `AI_API_KEY` or `GEMINI_API_KEY`; optional `GEMINI_MODEL` (e.g. `gemini-2.5-flash`)
   - **OpenAI:** `OPENAI_API_KEY`; optional `OPENAI_MODEL` (e.g. `gpt-4o`)
 
 Users pick provider and model in the app (profile menu); choices are stored in the browser (localStorage) and sent with each upload. No database table is required for AI settings.
