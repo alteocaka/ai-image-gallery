@@ -2,6 +2,12 @@
 
 A web application where users can upload images, get automatic AI-generated tags and descriptions, and search through their images using text or find similar images. Supports **multiple AI providers** (Google Gemini and OpenAI); users choose provider and model in the profile menu; preferences are stored in the browser (localStorage).
 
+## Live application
+
+**[AI Image Gallery](https://ai-image-gallery-delta.vercel.app/)** — frontend on Vercel, API on Render.
+
+**Note (Render free tier):** The backend spins down after inactivity. If the app is slow or requests fail, open the backend URL first ([https://ai-image-gallery-b1g4.onrender.com](https://ai-image-gallery-b1g4.onrender.com)), wait a moment for it to wake up, then use the app again.
+
 ## Tech Stack
 
 - **Frontend:** React (Vite)
@@ -145,5 +151,4 @@ Runs Prettier on README, server source, and client source.
 
 ## Potential Improvements
 
-- Deploy to Vercel (frontend) + Railway/Render (backend)
 - More client unit tests
