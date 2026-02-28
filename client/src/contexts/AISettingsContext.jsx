@@ -71,9 +71,7 @@ export function AISettingsProvider({ children }) {
     },
   };
 
-  return (
-    <AISettingsContext.Provider value={value}>{children}</AISettingsContext.Provider>
-  );
+  return <AISettingsContext.Provider value={value}>{children}</AISettingsContext.Provider>;
 }
 
 export function useAISettings() {

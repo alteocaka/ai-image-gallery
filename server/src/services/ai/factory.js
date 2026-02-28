@@ -12,8 +12,7 @@ const PROVIDERS = {
   openai,
 };
 
-const DEFAULT_PROVIDER =
-  (process.env.AI_PROVIDER || 'gemini').toLowerCase().trim();
+const DEFAULT_PROVIDER = (process.env.AI_PROVIDER || 'gemini').toLowerCase().trim();
 
 /**
  * @param {Buffer} imageBuffer

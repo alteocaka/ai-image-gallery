@@ -75,8 +75,7 @@ export default function ImageGrid({
   function normalizeHex(hex) {
     if (!hex || typeof hex !== 'string') return '';
     const s = String(hex).replace(/^#/, '').trim();
-    if (s.length === 3)
-      return (s[0] + s[0] + s[1] + s[1] + s[2] + s[2]).toUpperCase();
+    if (s.length === 3) return (s[0] + s[0] + s[1] + s[1] + s[2] + s[2]).toUpperCase();
     return s.slice(0, 6).toUpperCase();
   }
 

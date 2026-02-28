@@ -198,9 +198,12 @@ export default function ImageModal({ image, onClose, onFindSimilar, onDeleted, o
           <div className="image-modal-meta">
             {isFailed && (
               <div className="image-modal-ai-failed" role="alert">
-                <span className="image-modal-ai-failed-icon" aria-hidden>⚠</span>
+                <span className="image-modal-ai-failed-icon" aria-hidden>
+                  ⚠
+                </span>
                 <p className="image-modal-ai-failed-text">
-                  AI analysis couldn&apos;t be completed (e.g. service limit). Add a description and tags below so you can search and find similar images.
+                  AI analysis couldn&apos;t be completed (e.g. service limit). Add a description and
+                  tags below so you can search and find similar images.
                 </p>
               </div>
             )}
@@ -245,7 +248,7 @@ export default function ImageModal({ image, onClose, onFindSimilar, onDeleted, o
                 </div>
               </>
             )}
-            {(isDone || isFailed) ? (
+            {isDone || isFailed ? (
               colors.length > 0 && (
                 <div className="image-modal-colors">
                   <span className="image-modal-label">Colors</span>

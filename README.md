@@ -1,6 +1,6 @@
 # 🖼️ AI Image Gallery
 
-A web application where users can upload images, get automatic AI-generated tags and descriptions, and search through their images using text or find similar images.
+A web application where users can upload images, get automatic AI-generated tags and descriptions, and search through their images using text or find similar images. Supports **multiple AI providers** (Google Gemini and OpenAI); users choose provider and model in the profile menu; preferences are stored in the browser (localStorage).
 
 ## Tech Stack
 
@@ -8,33 +8,35 @@ A web application where users can upload images, get automatic AI-generated tags
 - **Backend:** Node.js (Express)
 - **Auth & Database:** Supabase
 - **Storage:** Supabase Storage
+- **AI:** Pluggable providers — Google Gemini (default) or OpenAI (GPT-4o vision)
 
 ## Project Structure
 
 ```
 ├── client/                 # React frontend (Vite)
 │   ├── src/
-│   │   ├── components/     # UI components (AuthLayout, ImageGrid, ImageModal, etc.)
-│   │   ├── contexts/       # AuthContext, ThemeContext
+│   │   ├── components/     # AuthLayout, ImageGrid, ImageModal, UploadZone, UserMenu, etc.
+│   │   ├── contexts/       # AuthContext, ThemeContext, AISettingsContext
 │   │   ├── hooks/          # useAuth (re-exports from context)
 │   │   ├── lib/            # Supabase client, API helpers
 │   │   ├── pages/          # Login, Signup, Gallery
 │   │   ├── test/           # Vitest setup (setup.js)
-│   │   ├── constants.js
+│   │   ├── constants.js    # AI_PROVIDERS, AI_MODELS, etc.
 │   │   ├── App.jsx
 │   │   └── main.jsx
 │   └── package.json
 ├── server/                 # Node.js backend (Express)
 │   ├── src/
 │   │   ├── routes/         # auth, images, search
-│   │   ├── services/       # AI, storage
+│   │   ├── services/       # ai (factory + providers), storage
+│   │   │   └── ai/         # factory.js, providers/gemini.js, providers/openai.js
 │   │   ├── jobs/           # Background AI processing (processImage)
 │   │   ├── middleware/     # JWT auth
 │   │   └── lib/            # Supabase admin, config
 │   └── package.json
 ├── supabase/
-│   └── migrations/         # SQL schema & RLS
-├── .env.example (and client/.env.example, server/.env.example)
+│   └── migrations/        # SQL schema & RLS (images, image_metadata)
+├── client/.env.example, server/.env.example
 └── README.md
 ```
 
@@ -63,10 +65,14 @@ cd ../server && npm install
 
 ### 2. Environment variables
 
-Copy `.env.example` to `.env` in both `client/` and `server/`, then fill in:
+Copy `client/.env.example` to `client/.env` and `server/.env.example` to `server/.env`, then fill in:
 
 - **Client:** `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
-- **Server:** `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, AI service API key(s)
+- **Server:** `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_JWT_SECRET`, and at least one AI provider:
+  - **Gemini (default):** `AI_API_KEY` or `GEMINI_API_KEY`; optional `GEMINI_MODEL` (e.g. `gemini-2.0-flash`)
+  - **OpenAI:** `OPENAI_API_KEY`; optional `OPENAI_MODEL` (e.g. `gpt-4o`)
+
+Users pick provider and model in the app (profile menu); choices are stored in the browser (localStorage) and sent with each upload. No database table is required for AI settings.
 
 ### 3. Database
 
@@ -113,32 +119,28 @@ Runs Prettier on README, server source, and client source.
 
 ## API Keys Needed
 
-- **Supabase:** Project URL and anon key (frontend), service role key (backend, server-side only)
-- **AI service:** To be chosen; document in `docs/ai-service-comparison.md`
+- **Supabase:** Project URL and anon key (frontend), service role key and JWT secret (backend).
+- **AI:** At least one provider so image analysis works:
+  - **Gemini:** [Google AI Studio](https://aistudio.google.com/apikey) → `AI_API_KEY` or `GEMINI_API_KEY`
+  - **OpenAI:** [OpenAI API keys](https://platform.openai.com/api-keys) → `OPENAI_API_KEY`
 
 ## Features
 
 - **Auth:** Email/password via Supabase; protected and public routes; auth state in React context
 - **Gallery:** Paginated grid, text search, color filter, upload with progress
-- **Image modal:** View full image, description, tags, colors; edit description/tags; find similar; **download** (forced via API); delete
+- **AI providers:** Choose **Google Gemini** or **OpenAI** (and model) in the profile dropdown; selection stored in localStorage and used for new uploads
+- **Image modal:** View full image, description, tags, colors; edit description/tags; find similar; download; delete. If AI analysis fails (e.g. quota), a message prompts you to add description and tags manually
 - **Dark mode:** Toggle in navbar (persisted in localStorage)
-- **Code:** Path alias `@/`, shared AuthLayout for Login/Signup, constants file, Prettier
+- **Code:** Path alias `@/`, shared AuthLayout, AISettingsContext, constants (including AI provider/model lists), Prettier
 
 ## Architecture Decisions
 
 - **React + Vite:** Fast dev experience and builds.
 - **Express backend:** Handles AI API calls and background jobs; keeps API keys server-side. Image download is proxied through the server (`GET /api/images/:id/download`) so the browser gets `Content-Disposition: attachment`.
 - **Supabase Auth:** Email/password; RLS for per-user data.
-- **Background processing:** Images upload immediately; AI analysis runs async so uploads are not blocked.
+- **Background processing:** Images upload immediately; AI analysis runs async so uploads are not blocked. Provider and model are sent with each upload (from the client’s localStorage); the server uses them in the job.
+- **AI factory:** Server-side factory picks Gemini or OpenAI based on the request; both return the same shape (tags, description, colors). Add more providers by implementing the same interface under `server/src/services/ai/providers/`.
 - **Theme:** Single `ThemeProvider` and `data-theme` on `<html>`; dark styles in CSS.
-
-## AI Service Comparison
-
-See `docs/ai-service-comparison.md` for:
-
-- Comparison of at least 2 AI options
-- Chosen service and justification (cost, features, ease of use)
-- Trade-offs and cost awareness
 
 ## Potential Improvements
 
