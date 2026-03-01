@@ -75,7 +75,7 @@ export default function Gallery() {
           selectedColor={selectedColor}
           colors={availableColors}
           onSelectColor={setSelectedColor}
-          loading={gridLoading && !similarToImageId}
+          loading={gridLoading && !similarToImageId && !selectedColor}
         />
         <UploadZone onUploaded={handleUploaded} />
         <ImageGrid

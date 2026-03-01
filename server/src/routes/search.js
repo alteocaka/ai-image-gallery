@@ -213,9 +213,173 @@ router.get('/similar/:imageId', async (req, res, next) => {
   }
 });
 
-router.get('/color', (req, res) => {
-  // TODO: Filter by color (hex), user-scoped
-  res.json({ results: [] });
+/** GET /search/color?color=...&page=1&per_page=20 — images that have this dominant color (user-scoped, paginated) */
+router.get('/color', async (req, res, next) => {
+  try {
+    const userId = req.userId;
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const colorParam = (req.query.color || '').trim();
+    console.log('[search/color] query.color (raw):', JSON.stringify(colorParam));
+
+    if (!colorParam) {
+      return res.json({
+        images: [],
+        page: 1,
+        perPage: PER_PAGE_DEFAULT,
+        total: 0,
+        totalPages: 1,
+      });
+    }
+
+    const requestedHex = normalizeHex(colorParam);
+    if (!requestedHex) {
+      return res.status(400).json({ error: 'Invalid color (use hex e.g. #FF0000 or FF0000)' });
+    }
+
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const perPage = Math.min(
+      PER_PAGE_MAX,
+      Math.max(1, parseInt(req.query.per_page, 10) || PER_PAGE_DEFAULT)
+    );
+
+    // AI stores colors as #RRGGBB; DB array contains is case-sensitive, so try both cases
+    const hexWithHashUpper = `#${requestedHex}`;
+    const hexWithHashLower = `#${requestedHex.toLowerCase()}`;
+    console.log(
+      '[search/color] normalized requestedHex:',
+      requestedHex,
+      'hexWithHash (upper/lower):',
+      hexWithHashUpper,
+      hexWithHashLower,
+      'page:',
+      page,
+      'perPage:',
+      perPage
+    );
+
+    const [resUpper, resLower] = await Promise.all([
+      supabaseAdmin
+        .from('image_metadata')
+        .select('image_id')
+        .eq('user_id', userId)
+        .contains('colors', [hexWithHashUpper]),
+      requestedHex !== requestedHex.toLowerCase()
+        ? supabaseAdmin
+            .from('image_metadata')
+            .select('image_id')
+            .eq('user_id', userId)
+            .contains('colors', [hexWithHashLower])
+        : { data: [], error: null },
+    ]);
+
+    if (resUpper.error) throw new Error(resUpper.error.message);
+    if (resLower.error) throw new Error(resLower.error.message);
+
+    const seen = new Set();
+    const matchingIds = [];
+    for (const row of resUpper.data || []) {
+      if (!seen.has(row.image_id)) {
+        seen.add(row.image_id);
+        matchingIds.push(row.image_id);
+      }
+    }
+    for (const row of resLower.data || []) {
+      if (!seen.has(row.image_id)) {
+        seen.add(row.image_id);
+        matchingIds.push(row.image_id);
+      }
+    }
+
+    console.log(
+      '[search/color] metaRows (upper/lower) count:',
+      (resUpper.data || []).length,
+      (resLower.data || []).length,
+      'matchingIds:',
+      matchingIds
+    );
+
+    const total = matchingIds.length;
+    const totalPages = Math.max(1, Math.ceil(total / perPage));
+    const from = (page - 1) * perPage;
+    const pageIds = matchingIds.slice(from, from + perPage);
+    console.log('[search/color] total:', total, 'pageIds (this page):', pageIds);
+
+    if (pageIds.length === 0) {
+      return res.json({
+        images: [],
+        page,
+        perPage,
+        total,
+        totalPages,
+      });
+    }
+
+    // Use .or() so multiple IDs are reliable (some clients choke on .in() with 2+ values)
+    const idFilter = pageIds.map((id) => `id.eq.${id}`).join(',');
+    console.log('[search/color] idFilter (or):', idFilter);
+
+    const { data: rows, error: listError } = await supabaseAdmin
+      .from('images')
+      .select(
+        'id, user_id, filename, original_path, thumbnail_path, uploaded_at, image_metadata(id, description, tags, colors, ai_processing_status)'
+      )
+      .eq('user_id', userId)
+      .or(idFilter);
+
+    console.log(
+      '[search/color] listError:',
+      listError?.message ?? null,
+      'rows count:',
+      rows?.length ?? 0
+    );
+    if (rows?.length) {
+      rows.forEach((r) => {
+        const meta = Array.isArray(r.image_metadata) ? r.image_metadata[0] : r.image_metadata;
+        console.log(
+          '[search/color] row id:',
+          r.id,
+          'filename:',
+          r.filename,
+          'colors:',
+          JSON.stringify(meta?.colors ?? [])
+        );
+      });
+    }
+
+    if (listError) throw new Error(listError.message);
+
+    const orderById = new Map(pageIds.map((id, i) => [id, i]));
+    const sorted = (rows || []).sort((a, b) => orderById.get(a.id) - orderById.get(b.id));
+
+    const images = sorted.map((row) => {
+      const meta = Array.isArray(row.image_metadata) ? row.image_metadata[0] : row.image_metadata;
+      return {
+        id: row.id,
+        filename: row.filename,
+        originalUrl: getPublicUrl(row.original_path),
+        thumbnailUrl: getPublicUrl(row.thumbnail_path),
+        uploadedAt: row.uploaded_at,
+        description: meta?.description ?? null,
+        tags: meta?.tags ?? [],
+        colors: meta?.colors ?? [],
+        aiStatus: meta?.ai_processing_status ?? 'pending',
+      };
+    });
+
+    console.log('[search/color] responding with images.length:', images.length);
+    res.json({
+      images,
+      page,
+      perPage,
+      total,
+      totalPages,
+    });
+  } catch (err) {
+    next(err);
+  }
 });
 
 export default router;

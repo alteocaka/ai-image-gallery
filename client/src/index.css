@@ -586,6 +586,145 @@ body {
   pointer-events: none;
 }
 
+.color-filter-custom-wrap {
+  position: relative;
+  z-index: 10;
+}
+
+.color-filter-custom-trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #64748b;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.color-filter-custom-trigger:hover {
+  background: #e2e8f0;
+  border-color: #cbd5e1;
+  color: #475569;
+}
+
+.color-filter-custom-trigger--open {
+  background: #e2e8f0;
+  border-color: #94a3b8;
+}
+
+.color-filter-custom-trigger--active {
+  border-color: #0f3460;
+  color: #0f3460;
+}
+
+.color-filter-custom-trigger svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.color-filter-custom-dropdown {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  min-width: 12rem;
+  padding: 1rem;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
+  z-index: 100;
+}
+
+.color-filter-custom-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.color-filter-picker {
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0.125rem;
+  border: 2px solid #cbd5e1;
+  border-radius: 8px;
+  cursor: pointer;
+  background: #fff;
+  flex-shrink: 0;
+}
+
+.color-filter-picker:hover {
+  border-color: #94a3b8;
+}
+
+.color-filter-hex-form {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+.color-filter-hex-input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.4rem 0.5rem;
+  font-size: 0.8125rem;
+  font-family: ui-monospace, monospace;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #fff;
+  color: #1e293b;
+}
+
+.color-filter-hex-input::placeholder {
+  color: #94a3b8;
+}
+
+.color-filter-hex-input:focus {
+  outline: none;
+  border-color: #0f3460;
+  box-shadow: 0 0 0 2px rgba(15, 52, 96, 0.15);
+}
+
+.color-filter-hex-btn {
+  padding: 0.4rem 0.6rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #fff;
+  background: #0f3460;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.color-filter-hex-btn:hover {
+  background: #1e4a7a;
+}
+
+.color-filter-clear-btn {
+  width: 100%;
+  margin-top: 0.75rem;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #64748b;
+  background: transparent;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.color-filter-clear-btn:hover {
+  color: #475569;
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+
 /* Upload zone */
 .upload-zone {
   display: flex;
@@ -1713,6 +1852,69 @@ body {
 [data-theme='dark'] .color-filter-swatch--skeleton {
   background: linear-gradient(90deg, #334155 25%, #475569 50%, #334155 75%);
   background-size: 200% 100%;
+}
+
+[data-theme='dark'] .color-filter-custom-trigger {
+  color: #94a3b8;
+  background: #334155;
+  border-color: #475569;
+}
+
+[data-theme='dark'] .color-filter-custom-trigger:hover {
+  background: #475569;
+  border-color: #64748b;
+  color: #e2e8f0;
+}
+
+[data-theme='dark'] .color-filter-custom-trigger--open {
+  background: #475569;
+  border-color: #64748b;
+}
+
+[data-theme='dark'] .color-filter-custom-trigger--active {
+  border-color: #94a3b8;
+  color: #e2e8f0;
+}
+
+[data-theme='dark'] .color-filter-custom-dropdown {
+  background: #1e293b;
+  border-color: #475569;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme='dark'] .color-filter-picker {
+  border-color: #475569;
+  background: #334155;
+}
+
+[data-theme='dark'] .color-filter-picker:hover {
+  border-color: #64748b;
+}
+
+[data-theme='dark'] .color-filter-hex-input {
+  border-color: #475569;
+  background: #334155;
+  color: #e2e8f0;
+}
+
+[data-theme='dark'] .color-filter-hex-input::placeholder {
+  color: #64748b;
+}
+
+[data-theme='dark'] .color-filter-hex-input:focus {
+  border-color: #64748b;
+  box-shadow: 0 0 0 2px rgba(100, 116, 139, 0.25);
+}
+
+[data-theme='dark'] .color-filter-clear-btn {
+  color: #94a3b8;
+  border-color: #334155;
+}
+
+[data-theme='dark'] .color-filter-clear-btn:hover {
+  color: #e2e8f0;
+  border-color: #475569;
+  background: #334155;
 }
 
 [data-theme='dark'] .upload-zone-drop {

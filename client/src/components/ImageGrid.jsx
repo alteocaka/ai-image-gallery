@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import ImageModal from '@/components/ImageModal';
 import { PER_PAGE } from '@/constants';
@@ -43,12 +43,58 @@ export default function ImageGrid({
       setLoading(true);
       setError(null);
       try {
-        const url = searchQ
-          ? `/search/text?q=${encodeURIComponent(searchQ)}&page=${currentPage}&per_page=${PER_PAGE}`
-          : `/images?page=${currentPage}&per_page=${PER_PAGE}`;
+        let url;
+        if (selectedColor) {
+          url = `/search/color?color=${encodeURIComponent(selectedColor)}&page=${currentPage}&per_page=${PER_PAGE}`;
+          console.log(
+            '[ImageGrid] color filter: selectedColor (sent):',
+            JSON.stringify(selectedColor),
+            'url:',
+            url
+          );
+        } else if (searchQ) {
+          url = `/search/text?q=${encodeURIComponent(searchQ)}&page=${currentPage}&per_page=${PER_PAGE}`;
+        } else {
+          url = `/images?page=${currentPage}&per_page=${PER_PAGE}`;
+        }
         const data = await api(url);
         if (cancelled) return;
-        setAllImages(Array.isArray(data.images) ? data.images : []);
+        const images = Array.isArray(data.images) ? data.images : [];
+        if (selectedColor) {
+          console.log(
+            '[ImageGrid] color response: images.length:',
+            images.length,
+            'totalPages:',
+            data.totalPages
+          );
+          images.forEach((img, i) => {
+            console.log(
+              '[ImageGrid] color image',
+              i + 1,
+              'id:',
+              img.id,
+              'filename:',
+              img.filename,
+              'colors:',
+              JSON.stringify(img.colors ?? [])
+            );
+          });
+        } else {
+          console.log('[ImageGrid] list/text response: images.length:', images.length);
+          images.forEach((img, i) => {
+            console.log(
+              '[ImageGrid] image',
+              i + 1,
+              'id:',
+              img.id,
+              'filename:',
+              img.filename,
+              'colors:',
+              JSON.stringify(img.colors ?? [])
+            );
+          });
+        }
+        setAllImages(images);
         setTotalPagesFromServer(data.totalPages || 1);
       } catch (err) {
         if (cancelled) return;
@@ -62,7 +108,7 @@ export default function ImageGrid({
     return () => {
       cancelled = true;
     };
-  }, [currentPage, refreshKey, isSimilarMode, searchQ]);
+  }, [currentPage, refreshKey, isSimilarMode, searchQ, selectedColor]);
 
   // Report loading state so parent can show color filter skeleton
   useEffect(() => {
@@ -71,46 +117,19 @@ export default function ImageGrid({
     }
   }, [loading, isSimilarMode, onLoadingChange]);
 
-  /** Normalize hex for comparison (case-insensitive, #abc -> #AABBCC) */
-  function normalizeHex(hex) {
-    if (!hex || typeof hex !== 'string') return '';
-    const s = String(hex).replace(/^#/, '').trim();
-    if (s.length === 3) return (s[0] + s[0] + s[1] + s[1] + s[2] + s[2]).toUpperCase();
-    return s.slice(0, 6).toUpperCase();
-  }
-
-  // Server does text search when searchQ is set; we only filter by color client-side
-  const filtered = useMemo(() => {
-    let list = allImages;
-    if (selectedColor) {
-      const normalizedSelected = normalizeHex(selectedColor);
-      list = list.filter(
-        (img) =>
-          Array.isArray(img.colors) &&
-          img.colors.some((c) => normalizeHex(c) === normalizedSelected)
-      );
-    }
-    return list;
-  }, [allImages, selectedColor]);
-
-  // Derive available colors from current images and inform parent (Gallery)
+  // Derive available colors from gallery (only when no color filter — keep palette stable)
   useEffect(() => {
-    if (typeof onColorsChange !== 'function') return;
+    if (typeof onColorsChange !== 'function' || selectedColor) return;
     const allColors = allImages
       .flatMap((img) => (Array.isArray(img.colors) ? img.colors : []))
       .filter(Boolean);
     const unique = Array.from(new Set(allColors.map((c) => c.toUpperCase())));
     onColorsChange(unique.slice(0, 24));
-  }, [allImages, onColorsChange]);
+  }, [allImages, onColorsChange, selectedColor]);
 
   const hasColorFilter = !!selectedColor;
-  const totalPages = hasColorFilter
-    ? Math.max(1, Math.ceil(filtered.length / PER_PAGE))
-    : totalPagesFromServer;
-  const pageImages = useMemo(() => {
-    const start = (currentPage - 1) * PER_PAGE;
-    return filtered.slice(start, start + PER_PAGE);
-  }, [filtered, currentPage]);
+  const totalPages = totalPagesFromServer;
+  const pageImages = allImages;
 
   useEffect(() => {
     setCurrentPage(1);
@@ -200,7 +219,7 @@ export default function ImageGrid({
     );
   }
 
-  if (loading) {
+  if (loading && allImages.length === 0) {
     return (
       <div className="image-grid-wrap">
         <div className="image-grid image-grid--skeleton" aria-busy="true">
