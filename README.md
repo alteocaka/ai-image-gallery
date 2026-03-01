@@ -155,4 +155,13 @@ Runs Prettier on README, server source, and client source.
 
 ## Potential Improvements
 
-- More client unit tests
+**Business**
+
+- **Bulk actions** — Select multiple images to delete, add to album, re-run AI, or export selection.
+- **Albums** — Let users group images into collections and optionally scope search/filters to an album.
+
+**Code**
+
+- **More unit tests** — Add client tests (e.g. ImageGrid, UploadZone, ColorFilter) and server tests (processImageJob, search helpers, auth).
+- **Retry for AI job** — Retry with backoff when the AI provider fails (e.g. rate limit) so transient errors don’t permanently mark images as failed.
+- **Migrate to TypeScript** — Add types (JSDoc or full TS) for the AI interface, API responses, and key server modules to improve refactors and onboarding.
